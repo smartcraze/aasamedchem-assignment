@@ -4,6 +4,17 @@ import { db } from "@/lib/prisma";
 import { getUserByEmail, listUsers } from "@/lib/repository/users";
 import requireAdmin from "@/lib/required-admin";
 import { UserCreateSchema, UserQuerySchema } from "@/types/users";
+import { unstable_cache, revalidateTag } from "next/cache";
+
+const getCachedUsers = (query: any) =>
+  unstable_cache(
+    async () => {
+      const res = await listUsers(query);
+      return JSON.parse(JSON.stringify(res));
+    },
+    ["users-list", JSON.stringify(query)],
+    { tags: ["users"], revalidate: 3600 }
+  )();
 
 export async function GET(request: NextRequest) {
     const adminCheck = await requireAdmin();
@@ -21,7 +32,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: query.error.flatten() }, { status: 400 });
     }
 
-    const result = await listUsers(query.data);
+    const result = await getCachedUsers(query.data);
     return NextResponse.json(result);
 }
 
@@ -62,5 +73,6 @@ export async function POST(request: NextRequest) {
         },
     });
 
+    revalidateTag("users", {});
     return NextResponse.json(user, { status: 201 });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -21,8 +21,13 @@ export default function SignInForm() {
     const [form, setForm] = useState({ email: "", password: "" });
 
     // Already logged in — bounce to dashboard
+    useEffect(() => {
+        if (status === "authenticated") {
+            router.replace(callbackUrl);
+        }
+    }, [status, callbackUrl, router]);
+
     if (status === "authenticated") {
-        router.replace(callbackUrl);
         return null;
     }
 

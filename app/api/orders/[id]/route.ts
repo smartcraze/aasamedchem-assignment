@@ -3,6 +3,7 @@ import getSessionRole from "@/lib/getsessionRole";
 import { getOrderById, updateOrderStatus } from "@/lib/repository/order";
 import requireSeller from "@/lib/required-seller";
 import { OrderStatusUpdateSchema } from "@/types/orders";
+import { revalidateTag } from "next/cache";
 
 export async function GET(
   request: NextRequest,
@@ -61,5 +62,6 @@ export async function PATCH(
   }
 
   const updated = await updateOrderStatus(id, parsed.data.status);
+  revalidateTag("orders", {});
   return NextResponse.json(updated);
 }

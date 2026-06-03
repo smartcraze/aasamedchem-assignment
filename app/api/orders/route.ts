@@ -7,6 +7,18 @@ import { createOrder, listOrders } from "@/lib/repository/order";
 import requireBuyer from "@/lib/required-buyer";
 import requireSeller from "@/lib/required-seller";
 import { OrderCreateSchema, OrderQuerySchema } from "@/types/orders";
+import { unstable_cache, revalidateTag } from "next/cache";
+
+const getCachedOrders = (query: any) =>
+  unstable_cache(
+    async () => {
+      const res = await listOrders(query);
+      return JSON.parse(JSON.stringify(res));
+    },
+    ["orders-list", JSON.stringify(query)],
+    { tags: ["orders"], revalidate: 3600 }
+  )();
+
 
 const toDecimal = (value: Prisma.Decimal | string | number) =>
   value instanceof Prisma.Decimal ? value : new Prisma.Decimal(value);
@@ -44,7 +56,7 @@ export async function GET(request: NextRequest) {
     query.buyerId = undefined;
   }
 
-  const result = await listOrders(query);
+  const result = await getCachedOrders(query);
   return NextResponse.json(result);
 }
 
@@ -105,5 +117,6 @@ export async function POST(request: NextRequest) {
     items: orderItems,
   });
 
+  revalidateTag("orders", {});
   return NextResponse.json(order, { status: 201 });
 }

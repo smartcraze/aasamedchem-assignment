@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { deleteUser, getUserById, updateUser } from "@/lib/repository/users";
 import requireAdmin from "@/lib/required-admin";
 import { UserUpdateSchema } from "@/types/users";
+import { revalidateTag } from "next/cache";
 
 export async function GET(
     _request: NextRequest,
@@ -36,6 +37,7 @@ export async function PATCH(
     }
 
     const user = await updateUser(id, parsed.data);
+    revalidateTag("users", {});
     return NextResponse.json(user);
 }
 
@@ -48,5 +50,6 @@ export async function DELETE(
 
     const { id } = await params;
     await deleteUser(id);
+    revalidateTag("users", {});
     return NextResponse.json({ success: true });
 }

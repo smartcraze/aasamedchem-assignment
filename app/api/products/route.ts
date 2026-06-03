@@ -5,6 +5,17 @@ import {
 } from "@/types/products";
 import { createProduct, listProducts } from "@/lib/repository/products";
 import requireAdmin from "@/lib/required-admin";
+import { unstable_cache, revalidateTag } from "next/cache";
+
+const getCachedProducts = (query: any) =>
+  unstable_cache(
+    async () => {
+      const res = await listProducts(query);
+      return JSON.parse(JSON.stringify(res));
+    },
+    ["products-list", JSON.stringify(query)],
+    { tags: ["products"], revalidate: 3600 }
+  )();
 
 
 
@@ -24,7 +35,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: query.error.flatten() }, { status: 400 });
     }
 
-    const result = await listProducts(query.data);
+    const result = await getCachedProducts(query.data);
     return NextResponse.json(result);
 }
 
@@ -40,6 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     const product = await createProduct(parsed.data);
+    revalidateTag("products", {});
     return NextResponse.json(product, { status: 201 });
 }
 

@@ -65,7 +65,7 @@ export function NavUser({ session }: NavUserProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     id="nav-sign-out"
-                    className="cursor-pointer text-destructive-foreground focus:bg-destructive/10 focus:text-foreground"
+                    className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-foreground"
                     onClick={() => signOut()}
                 >
                     <LogOut className="mr-2 h-4 w-4" /> Sign out

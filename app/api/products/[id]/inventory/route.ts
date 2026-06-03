@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ProductInventorySchema } from "@/types/products";
 import { updateInventory } from "@/lib/repository/products";
 import requireAdmin from "@/lib/required-admin";
+import { revalidateTag } from "next/cache";
 
 export async function PATCH(
     request: NextRequest,
@@ -19,5 +20,6 @@ export async function PATCH(
     }
 
     const product = await updateInventory(id, parsed.data.stockBaseQty);
+    revalidateTag("products", {});
     return NextResponse.json(product);
 }

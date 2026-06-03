@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ProductUpdateSchema } from "@/types/products";
 import { deleteProduct, getProductById, updateProduct } from "@/lib/repository/products";
 import requireAdmin from "@/lib/required-admin";
+import { revalidateTag } from "next/cache";
 
 export async function GET(
     _request: NextRequest,
@@ -33,6 +34,7 @@ export async function PATCH(
     }
 
     const product = await updateProduct(id, parsed.data);
+    revalidateTag("products", {});
     return NextResponse.json(product);
 }
 
@@ -45,5 +47,6 @@ export async function DELETE(
 
     const { id } = await params;
     await deleteProduct(id);
+    revalidateTag("products", {});
     return NextResponse.json({ success: true });
 }

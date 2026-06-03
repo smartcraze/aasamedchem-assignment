@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 
 export function LandingFooter() {
     return (
-        <footer className="border-t border-border bg-muted/20 px-4 py-12">
+        <footer className="border-t border-border bg-muted/20 px-4 py-6">
             <div className="mx-auto max-w-7xl">
                 <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
                     {/* Brand */}
@@ -17,13 +17,11 @@ export function LandingFooter() {
 
                     {/* Links */}
                     <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                        <Link href="/sign-in"  className="hover:text-foreground transition-colors">Sign in</Link>
-                        <Link href="/sign-up"  className="hover:text-foreground transition-colors">Register</Link>
+                        <Link href="/sign-in" className="hover:text-foreground transition-colors">Sign in</Link>
+                        <Link href="/sign-up" className="hover:text-foreground transition-colors">Register</Link>
                         <Link href="/products" className="hover:text-foreground transition-colors">Products</Link>
                     </div>
                 </div>
-
-                <Separator className="my-8" />
 
                 <div className="flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-between">
                     <p className="text-xs text-muted-foreground">
