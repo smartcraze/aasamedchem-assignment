@@ -1,72 +1,77 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { SignJWT, jwtVerify } from "jose";
+import { cookies } from "next/headers";
 import { db } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-    adapter: PrismaAdapter(db),
+const SECRET = new TextEncoder().encode(
+    process.env.AUTH_SECRET ?? "fallback-secret-change-in-production-32chars"
+);
 
-    providers: [
-        Credentials({
-            name: "credentials",
-            credentials: {
-                email: {},
-                password: {},
-            },
+const COOKIE_NAME = "auth-token";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-            async authorize(credentials) {
-                if (!credentials.email || !credentials.password) {
-                    return null;
-                }
+// ─── Token shape ─────────────────────────────────────────────────────────────
 
-                const user = await db.user.findUnique({
-                    where: {
-                        email: credentials.email as string,
-                    },
-                });
+export interface SessionPayload {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+}
 
-                if (!user || !user.password) {
-                    return null;
-                }
+// ─── Sign & verify ───────────────────────────────────────────────────────────
 
-                const validPassword = await bcrypt.compare(
-                    credentials.password as string,
-                    user.password
-                );
+export async function signToken(payload: SessionPayload): Promise<string> {
+    return new SignJWT({ ...payload })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("7d")
+        .sign(SECRET);
+}
 
-                if (!validPassword) {
-                    return null;
-                }
+export async function verifyToken(token: string): Promise<SessionPayload | null> {
+    try {
+        const { payload } = await jwtVerify(token, SECRET);
+        return payload as unknown as SessionPayload;
+    } catch {
+        return null;
+    }
+}
 
-                return {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role,
-                };
-            },
-        }),
-    ],
+// ─── Cookie helpers ───────────────────────────────────────────────────────────
 
-    session: {
-        strategy: "jwt",
-    },
+export async function setSessionCookie(payload: SessionPayload) {
+    const token = await signToken(payload);
+    const cookieStore = await cookies();
+    cookieStore.set(COOKIE_NAME, token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: COOKIE_MAX_AGE,
+    });
+}
 
-    callbacks: {
-        async jwt({ token, user }) {
-            if (user) {
-                token.role = (user as any).role;
-            }
-            return token;
-        },
+export async function clearSessionCookie() {
+    const cookieStore = await cookies();
+    cookieStore.delete(COOKIE_NAME);
+}
 
-        async session({ session, token }) {
-            if (session.user) {
-                session.user.id = token.sub!;
-                session.user.role = token.role as string;
-            }
-            return session;
-        },
-    },
-});
+// ─── Session getter ───────────────────────────────────────────────────────────
+
+export async function getSession(): Promise<SessionPayload | null> {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(COOKIE_NAME)?.value;
+    if (!token) return null;
+    return verifyToken(token);
+}
+
+// ─── Full user from DB (for sensitive ops) ────────────────────────────────────
+
+export async function getSessionUser() {
+    const session = await getSession();
+    if (!session) return null;
+    return db.user.findUnique({
+        where: { id: session.id },
+        select: { id: true, email: true, name: true, role: true },
+    });
+}

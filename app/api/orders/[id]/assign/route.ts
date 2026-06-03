@@ -5,10 +5,12 @@ import { OrderAssignSchema } from "@/types/orders";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const adminCheck = await requireAdmin(request);
+  const adminCheck = await requireAdmin();
   if (adminCheck) return adminCheck;
+
+  const { id } = await params;
 
   const body = await request.json();
   const parsed = OrderAssignSchema.safeParse(body);
@@ -17,11 +19,11 @@ export async function PATCH(
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const existing = await getOrderById(params.id);
+  const existing = await getOrderById(id);
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const updated = await assignOrder(params.id, parsed.data.sellerId);
+  const updated = await assignOrder(id, parsed.data.sellerId);
   return NextResponse.json(updated);
 }

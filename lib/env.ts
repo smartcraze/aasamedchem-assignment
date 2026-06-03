@@ -3,13 +3,13 @@ import { z } from "zod";
 const envSchema = z.object({
     DATABASE_URL: z.string().url(),
 
-    BETTER_AUTH_SECRET: z
+    AUTH_SECRET: z
         .string()
-        .min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
+        .min(32, "AUTH_SECRET must be at least 32 characters"),
 
-    BETTER_AUTH_URL: z.string().url(),
+    AUTH_URL: z.string().url(),
 
-    NODE_ENV: z.enum(["development", "test", "production"]),
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
 type Env = z.infer<typeof envSchema>;

@@ -6,7 +6,7 @@ import requireAdmin from "@/lib/required-admin";
 import { UserCreateSchema, UserQuerySchema } from "@/types/users";
 
 export async function GET(request: NextRequest) {
-    const adminCheck = await requireAdmin(request);
+    const adminCheck = await requireAdmin();
     if (adminCheck) return adminCheck;
 
     const { searchParams } = new URL(request.url);
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-    const adminCheck = await requireAdmin(request);
+    const adminCheck = await requireAdmin();
     if (adminCheck) return adminCheck;
 
     const body = await request.json();

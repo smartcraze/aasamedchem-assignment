@@ -4,13 +4,15 @@ import requireAdmin from "@/lib/required-admin";
 import { UserUpdateSchema } from "@/types/users";
 
 export async function GET(
-    request: NextRequest,
-    { params }: { params: { id: string } }
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const adminCheck = await requireAdmin(request);
+    const adminCheck = await requireAdmin();
     if (adminCheck) return adminCheck;
 
-    const user = await getUserById(params.id);
+    const { id } = await params;
+    const user = await getUserById(id);
+
     if (!user) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -20,11 +22,12 @@ export async function GET(
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const adminCheck = await requireAdmin(request);
+    const adminCheck = await requireAdmin();
     if (adminCheck) return adminCheck;
 
+    const { id } = await params;
     const body = await request.json();
     const parsed = UserUpdateSchema.safeParse(body);
 
@@ -32,17 +35,18 @@ export async function PATCH(
         return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    const user = await updateUser(params.id, parsed.data);
+    const user = await updateUser(id, parsed.data);
     return NextResponse.json(user);
 }
 
 export async function DELETE(
-    request: NextRequest,
-    { params }: { params: { id: string } }
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const adminCheck = await requireAdmin(request);
+    const adminCheck = await requireAdmin();
     if (adminCheck) return adminCheck;
 
-    await deleteUser(params.id);
+    const { id } = await params;
+    await deleteUser(id);
     return NextResponse.json({ success: true });
 }

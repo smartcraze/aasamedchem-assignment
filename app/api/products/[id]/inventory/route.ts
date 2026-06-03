@@ -5,11 +5,12 @@ import requireAdmin from "@/lib/required-admin";
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const adminCheck = await requireAdmin(request);
+    const adminCheck = await requireAdmin();
     if (adminCheck) return adminCheck;
 
+    const { id } = await params;
     const body = await request.json();
     const parsed = ProductInventorySchema.safeParse(body);
 
@@ -17,6 +18,6 @@ export async function PATCH(
         return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    const product = await updateInventory(params.id, parsed.data.stockBaseQty);
+    const product = await updateInventory(id, parsed.data.stockBaseQty);
     return NextResponse.json(product);
 }

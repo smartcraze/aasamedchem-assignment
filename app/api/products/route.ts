@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-    const adminCheck = await requireAdmin(request);
+    const adminCheck = await requireAdmin();
     if (adminCheck) return adminCheck;
 
     const body = await request.json();

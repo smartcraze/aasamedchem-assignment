@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import getSessionRole from "@/lib/getsessionRole";
 
-const requireSeller = async (request: NextRequest) => {
-    const { session, roleResult } = await getSessionRole(request);
+const requireSeller = async () => {
+    const { session, roleResult } = await getSessionRole();
 
-    if (!session?.user || !roleResult.success) {
+    if (!session || !roleResult.success) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

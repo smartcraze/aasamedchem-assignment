@@ -12,8 +12,9 @@ const toDecimal = (value: Prisma.Decimal | string | number) =>
   value instanceof Prisma.Decimal ? value : new Prisma.Decimal(value);
 
 export async function GET(request: NextRequest) {
-  const { session, roleResult } = await getSessionRole(request);
-  if (!session?.user || !roleResult.success) {
+  const { session, roleResult } = await getSessionRole();
+
+  if (!session || !roleResult.success) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -33,13 +34,13 @@ export async function GET(request: NextRequest) {
   const role = roleResult.data;
   const query = { ...parsed.data };
 
+  // Scope results to the caller's own orders
   if (role === "BUYER") {
-    query.buyerId = session.user.id;
+    query.buyerId = session.id;
     query.sellerId = undefined;
   }
-
   if (role === "SELLER") {
-    query.sellerId = session.user.id;
+    query.sellerId = session.id;
     query.buyerId = undefined;
   }
 
@@ -48,17 +49,16 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const buyerCheck = await requireBuyer(request);
+  const buyerCheck = await requireBuyer();
   if (buyerCheck) return buyerCheck;
 
-  const { session, roleResult } = await getSessionRole(request);
-  if (!session?.user || !roleResult.success) {
+  const { session, roleResult } = await getSessionRole();
+  if (!session || !roleResult.success) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json();
   const parsed = OrderCreateSchema.safeParse(body);
-
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
@@ -78,31 +78,28 @@ export async function POST(request: NextRequest) {
   let totalAmount = new Prisma.Decimal(0);
   const orderItems = items.map((item) => {
     const product = productMap.get(item.productId);
-    if (!product) {
-      throw new Error("Product not found");
-    }
+    if (!product) throw new Error("Product not found");
 
     const baseQty = convertToBaseUnit(product.dimension, item.orderedUnit, item.orderedQty);
     const unitPrice = toDecimal(product.pricePerBaseUnit);
     const totalPrice = baseQty.mul(unitPrice);
-
     totalAmount = totalAmount.add(totalPrice);
 
     return {
       productId: product.id,
       orderedQty: item.orderedQty,
       orderedUnit: item.orderedUnit,
-      baseQty: baseQty,
-      unitPrice: unitPrice,
-      totalPrice: totalPrice,
+      baseQty,
+      unitPrice,
+      totalPrice,
     };
   });
 
   const role = roleResult.data;
-  const sellerId = role === "ADMIN" ? parsed.data.sellerId ?? null : null;
+  const sellerId = role === "ADMIN" ? (parsed.data.sellerId ?? null) : null;
 
   const order = await createOrder({
-    buyerId: session.user.id,
+    buyerId: session.id,
     sellerId,
     totalAmount,
     items: orderItems,

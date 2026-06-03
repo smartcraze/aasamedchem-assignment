@@ -1,17 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { jwtVerify } from "jose";
 import { RoleSchema } from "./types/auth";
+
+// ─── Config ───────────────────────────────────────────────────────────────────
+// jose + NextRequest cookies are both Edge-compatible.
+// We CANNOT import from @/lib/auth here because it uses next/headers (Node-only).
+
+const SECRET = new TextEncoder().encode(
+    process.env.AUTH_SECRET ?? "aasa-medchem-super-secret-jwt-key-32chars-minimum"
+);
+
+const COOKIE_NAME = "auth-token";
 
 type Role = "ADMIN" | "SELLER" | "BUYER";
 
 const roleRules: Array<{ prefix: string; roles: Role[] }> = [
-    { prefix: "/admin", roles: ["ADMIN"] },
-    { prefix: "/seller", roles: ["SELLER", "ADMIN"] },
-    { prefix: "/buyer", roles: ["BUYER", "ADMIN"] },
-    { prefix: "/api/admin", roles: ["ADMIN"] },
+    { prefix: "/admin",      roles: ["ADMIN"] },
+    { prefix: "/seller",     roles: ["SELLER", "ADMIN"] },
+    { prefix: "/buyer",      roles: ["BUYER", "ADMIN"] },
+    { prefix: "/api/admin",  roles: ["ADMIN"] },
     { prefix: "/api/seller", roles: ["SELLER", "ADMIN"] },
-    { prefix: "/api/buyer", roles: ["BUYER", "ADMIN"] },
+    { prefix: "/api/buyer",  roles: ["BUYER", "ADMIN"] },
 ];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const isApiPath = (pathname: string) => pathname.startsWith("/api/");
 
@@ -22,36 +34,46 @@ const unauthorizedResponse = (request: NextRequest) => {
     if (isApiPath(request.nextUrl.pathname)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
+    const signInUrl = new URL("/sign-in", request.url);
+    signInUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
+    return NextResponse.redirect(signInUrl);
 };
 
 const forbiddenResponse = (request: NextRequest) => {
     if (isApiPath(request.nextUrl.pathname)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-
-    const homeUrl = new URL("/", request.url);
-    return NextResponse.redirect(homeUrl);
+    return NextResponse.redirect(new URL("/", request.url));
 };
+
+// ─── Middleware ───────────────────────────────────────────────────────────────
 
 export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const requiredRoles = getRequiredRoles(pathname);
 
+    // Path is public — let it through
     if (!requiredRoles) {
         return NextResponse.next();
     }
 
-    const session = await auth(request);
+    // Read and verify the JWT cookie directly (Edge-safe)
+    const token = request.cookies.get(COOKIE_NAME)?.value;
 
-    if (!session?.user) {
+    if (!token) {
         return unauthorizedResponse(request);
     }
 
-    const roleResult = RoleSchema.safeParse((session.user as { role?: unknown }).role);
+    let payload: { id?: string; role?: string } | null = null;
+    try {
+        const verified = await jwtVerify(token, SECRET);
+        payload = verified.payload as { id?: string; role?: string };
+    } catch {
+        // Expired or tampered token
+        return unauthorizedResponse(request);
+    }
+
+    const roleResult = RoleSchema.safeParse(payload?.role);
     if (!roleResult.success) {
         return forbiddenResponse(request);
     }
@@ -73,5 +95,3 @@ export const config = {
         "/api/buyer/:path*",
     ],
 };
-
-
