@@ -4,6 +4,9 @@ AasaMedChem is an enterprise-grade chemical inventory and quotation management p
 
 ---
 
+
+<img width="2170" height="1371" alt="image" src="https://github.com/user-attachments/assets/5a666cb1-34d2-40a0-907f-336681c11a29" />
+
 ## 🌟 Core Features
 
 ### 🔐 Role-Based Access Control
