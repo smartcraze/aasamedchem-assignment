@@ -1,8 +1,8 @@
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth";
 
-export default function Home() {
-  return (
-    <main>
-      <h1 className="text-4xl font-bold text-center mt-10">Welcome to MedChem</h1>
-    </main>
-  );
+export default async function RootPage() {
+    const session = await getSession();
+    if (session) redirect("/dashboard");
+    redirect("/sign-in");
 }

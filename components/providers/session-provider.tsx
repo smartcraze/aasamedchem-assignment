@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { SessionPayload } from "@/lib/auth";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type SessionStatus = "loading" | "authenticated" | "unauthenticated";
 
@@ -27,11 +26,9 @@ export interface SessionContextValue {
     signOut: (opts?: { callbackUrl?: string }) => Promise<void>;
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
 
 const SessionContext = createContext<SessionContextValue | null>(null);
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -51,7 +48,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
-    // Fetch on mount
     useEffect(() => {
         refresh();
     }, [refresh]);
@@ -85,7 +81,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     );
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 /**
  * Access the current session anywhere in the client tree.
