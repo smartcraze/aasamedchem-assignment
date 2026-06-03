@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
         },
     });
 
-    let user = await getUserByEmail(email);
+    const user = await getUserByEmail(email);
     if (!user) {
         return NextResponse.json({ error: "User creation failed" }, { status: 500 });
     }
