@@ -5,7 +5,15 @@ import { DecimalStringSchema } from "@/types/products";
 export type OrderRecord = Order;
 export type OrderItemRecord = OrderItem;
 
-export const OrderStatusSchema = z.nativeEnum(OrderStatus);
+export const OrderStatusSchema = z.preprocess(
+    (val) => {
+        if (typeof val === "string" && val.toUpperCase() === "CONFIRMED") {
+            return "APPROVED";
+        }
+        return val;
+    },
+    z.nativeEnum(OrderStatus)
+);
 export type OrderStatusValue = z.infer<typeof OrderStatusSchema>;
 
 export const UnitSchema = z.nativeEnum(Unit);
