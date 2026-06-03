@@ -14,7 +14,7 @@ export function SellerDashboard({ session }: { session: SessionPayload }) {
     useEffect(() => {
         fetch("/api/orders")
             .then((r) => r.json())
-            .then((data) => setOrders(Array.isArray(data) ? data : []))
+            .then((data) => setOrders(data.items ?? []))
             .finally(() => setLoading(false));
     }, []);
 

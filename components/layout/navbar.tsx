@@ -6,6 +6,7 @@ import { useSession } from "@/lib/hooks/use-session";
 import { NavBrand } from "./nav-brand";
 import { NavLinks } from "./nav-links";
 import { NavUser } from "./nav-user";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -20,7 +21,10 @@ export default function Navbar() {
                     <NavBrand />
                     {session && <NavLinks role={session.role} pathname={pathname} />}
                 </div>
-                <NavUser session={session} />
+                <div className="flex items-center gap-1">
+                    <ThemeToggle />
+                    <NavUser session={session} />
+                </div>
             </div>
         </header>
     );

@@ -20,7 +20,7 @@ export default function ProductsPage() {
 
         fetch(`/api/products?${params}`)
             .then((r) => r.json())
-            .then((d) => setProducts(Array.isArray(d) ? d : []))
+            .then((d) => setProducts(d.items ?? []))
             .finally(() => setLoading(false));
     }, [q, dimension]);
 

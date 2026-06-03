@@ -2,10 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { RoleSchema } from "./types/auth";
 
-// ─── Config ───────────────────────────────────────────────────────────────────
-// jose + NextRequest cookies are both Edge-compatible.
-// We CANNOT import from @/lib/auth here because it uses next/headers (Node-only).
-
 const SECRET = new TextEncoder().encode(
     process.env.AUTH_SECRET ?? "aasa-medchem-super-secret-jwt-key-32chars-minimum"
 );
@@ -15,15 +11,14 @@ const COOKIE_NAME = "auth-token";
 type Role = "ADMIN" | "SELLER" | "BUYER";
 
 const roleRules: Array<{ prefix: string; roles: Role[] }> = [
-    { prefix: "/admin",      roles: ["ADMIN"] },
-    { prefix: "/seller",     roles: ["SELLER", "ADMIN"] },
-    { prefix: "/buyer",      roles: ["BUYER", "ADMIN"] },
-    { prefix: "/api/admin",  roles: ["ADMIN"] },
+    { prefix: "/admin", roles: ["ADMIN"] },
+    { prefix: "/seller", roles: ["SELLER", "ADMIN"] },
+    { prefix: "/buyer", roles: ["BUYER", "ADMIN"] },
+    { prefix: "/api/admin", roles: ["ADMIN"] },
     { prefix: "/api/seller", roles: ["SELLER", "ADMIN"] },
-    { prefix: "/api/buyer",  roles: ["BUYER", "ADMIN"] },
+    { prefix: "/api/buyer", roles: ["BUYER", "ADMIN"] },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const isApiPath = (pathname: string) => pathname.startsWith("/api/");
 
@@ -46,13 +41,11 @@ const forbiddenResponse = (request: NextRequest) => {
     return NextResponse.redirect(new URL("/", request.url));
 };
 
-// ─── Middleware ───────────────────────────────────────────────────────────────
 
 export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const requiredRoles = getRequiredRoles(pathname);
 
-    // Path is public — let it through
     if (!requiredRoles) {
         return NextResponse.next();
     }

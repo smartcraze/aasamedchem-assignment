@@ -20,7 +20,7 @@ export default function OrdersPage() {
     useEffect(() => {
         fetch("/api/orders")
             .then((r) => r.json())
-            .then((d) => setOrders(Array.isArray(d) ? d : []))
+            .then((d) => setOrders(d.items ?? []))
             .finally(() => setLoading(false));
     }, []);
 

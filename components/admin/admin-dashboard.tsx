@@ -21,9 +21,9 @@ export function AdminDashboard({ session }: { session: SessionPayload }) {
             fetch("/api/products").then((r) => r.json()),
             fetch("/api/users").then((r) => r.json()),
         ]).then(([o, p, u]) => {
-            setOrders(Array.isArray(o) ? o : []);
-            setProducts(Array.isArray(p) ? p : []);
-            setUsers(Array.isArray(u) ? u : []);
+            setOrders(o.items ?? []);
+            setProducts(p.items ?? []);
+            setUsers(u.items ?? []);
         }).finally(() => setLoading(false));
     }, []);
 
