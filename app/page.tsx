@@ -15,9 +15,6 @@ export const metadata = {
 };
 
 export default async function RootPage() {
-    const session = await getSession();
-    if (session) redirect("/dashboard");
-
     return (
         <div className="min-h-screen bg-background text-foreground">
             <LandingNav />

@@ -6,6 +6,7 @@ import { FlaskConical, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { cn } from "@/lib/utils";
+import { useSession } from "@/lib/hooks/use-session";
 
 const NAV_LINKS = [
     { href: "#features", label: "Features" },
@@ -16,6 +17,7 @@ const NAV_LINKS = [
 export function LandingNav() {
     const [scrolled, setScrolled] = useState(false);
     const [open, setOpen] = useState(false);
+    const { status } = useSession();
 
     useEffect(() => {
         const handler = () => setScrolled(window.scrollY > 12);
@@ -49,15 +51,22 @@ export function LandingNav() {
                     ))}
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center gap-2">
                     <ThemeToggle />
-                    <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
-                        <Link href="/sign-in">Sign in</Link>
-                    </Button>
-                    <Button size="sm" asChild className="hidden sm:flex">
-                        <Link href="/sign-up">Get started</Link>
-                    </Button>
+                    {status === "authenticated" ? (
+                        <Button size="sm" asChild className="hidden sm:flex">
+                            <Link href="/dashboard">Dashboard</Link>
+                        </Button>
+                    ) : (
+                        <>
+                            <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
+                                <Link href="/sign-in">Sign in</Link>
+                            </Button>
+                            <Button size="sm" asChild className="hidden sm:flex">
+                                <Link href="/sign-up">Get started</Link>
+                            </Button>
+                        </>
+                    )}
                     <button className="md:hidden p-1.5 text-muted-foreground hover:text-foreground"
                         onClick={() => setOpen(!open)} aria-label="Toggle menu">
                         {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -75,12 +84,20 @@ export function LandingNav() {
                         </a>
                     ))}
                     <div className="flex gap-2 pt-3 border-t border-border">
-                        <Button variant="outline" size="sm" className="flex-1" asChild>
-                            <Link href="/sign-in">Sign in</Link>
-                        </Button>
-                        <Button size="sm" className="flex-1" asChild>
-                            <Link href="/sign-up">Get started</Link>
-                        </Button>
+                        {status === "authenticated" ? (
+                            <Button size="sm" className="flex-1" asChild>
+                                <Link href="/dashboard">Dashboard</Link>
+                            </Button>
+                        ) : (
+                            <>
+                                <Button variant="outline" size="sm" className="flex-1" asChild>
+                                    <Link href="/sign-in">Sign in</Link>
+                                </Button>
+                                <Button size="sm" className="flex-1" asChild>
+                                    <Link href="/sign-up">Get started</Link>
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
             )}

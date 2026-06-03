@@ -1,88 +1,104 @@
 "use client";
 
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { FlaskConical, ArrowRight } from "lucide-react";
+import { FlaskConical } from "lucide-react";
 
 interface Product {
-    id: string;
-    name: string;
-    sku?: string;
-    dimension: string;
-    stockBaseQty: string;
-    pricePerBaseUnit: string;
-    isActive: boolean;
-    description?: string;
+  id: string;
+  name: string;
+  sku?: string;
+  dimension: string;
+  stockBaseQty: string;
+  pricePerBaseUnit: string;
+  isActive: boolean;
+  description?: string;
 }
 
 const DIMENSION_UNIT: Record<string, string> = {
-    WEIGHT: "g",
-    VOLUME: "mL",
-    COUNT:  "units",
+  WEIGHT: "g",
+  VOLUME: "mL",
+  COUNT: "units",
 };
 
 export function ProductCard({ product }: { product: Product }) {
-    const unit = DIMENSION_UNIT[product.dimension] ?? product.dimension;
+  const unit = DIMENSION_UNIT[product.dimension] ?? product.dimension;
 
-    return (
-        <Card className="group flex flex-col overflow-hidden border-border bg-card transition-shadow hover:shadow-md">
-            {/* Top accent bar */}
-            <div className="h-1 w-full bg-primary opacity-60 group-hover:opacity-100 transition-opacity" />
+  return (
+    <div className="group relative flex flex-col justify-between border border-border bg-card p-6 transition-all duration-300 hover:shadow-lg hover:border-foreground/30 rounded-none">
+      
+      {/* Editorial top layout: category + status */}
+      <div className="flex items-center justify-between gap-4 text-[10px] tracking-widest uppercase font-mono text-muted-foreground">
+        <span>{product.dimension} // SEGMENT</span>
+        <div className="flex items-center gap-1.5">
+          <span className={`h-1 w-1 rounded-full ${product.isActive ? "bg-primary" : "bg-muted-foreground"}`} />
+          <span>{product.isActive ? "In Stock" : "Archived"}</span>
+        </div>
+      </div>
 
-            <CardContent className="flex-1 p-5 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                        <FlaskConical className="h-4 w-4 text-primary" />
-                    </div>
-                    <Badge
-                        variant={product.isActive ? "secondary" : "outline"}
-                        className="text-xs"
-                    >
-                        {product.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                </div>
+      {/* Main product identifiers */}
+      <div className="mt-6 space-y-3">
+        <div className="space-y-1">
+          <h3 className="font-serif text-xl font-normal text-foreground leading-snug tracking-tight group-hover:text-primary transition-colors duration-200">
+            {product.name}
+          </h3>
+          {product.sku && (
+            <p className="font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
+              Archival ID: {product.sku}
+            </p>
+          )}
+        </div>
 
-                <div>
-                    <h3 className="font-serif font-semibold text-foreground leading-snug line-clamp-2">
-                        {product.name}
-                    </h3>
-                    {product.sku && (
-                        <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-                            SKU: {product.sku}
-                        </p>
-                    )}
-                    {product.description && (
-                        <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">
-                            {product.description}
-                        </p>
-                    )}
-                </div>
+        {/* Separator rule line (editorial print design) */}
+        <div className="h-px w-10 bg-foreground/20 transition-all duration-300 group-hover:w-20" />
 
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                    <div>
-                        <p className="text-xs text-muted-foreground">Stock</p>
-                        <p className="text-sm font-medium text-foreground">
-                            {Number(product.stockBaseQty).toLocaleString()} {unit}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Price / {unit}</p>
-                        <p className="text-sm font-semibold text-primary">
-                            ₹{Number(product.pricePerBaseUnit).toFixed(2)}
-                        </p>
-                    </div>
-                </div>
-            </CardContent>
+        {/* Italic editorial description */}
+        {product.description ? (
+          <p className="font-serif italic text-xs text-muted-foreground/90 leading-relaxed line-clamp-2 h-10">
+            {product.description}
+          </p>
+        ) : (
+          <p className="font-serif italic text-xs text-muted-foreground/50 leading-relaxed h-10">
+            No specifications provided in the catalog.
+          </p>
+        )}
+      </div>
 
-            <CardFooter className="border-t border-border bg-muted/20 px-5 py-3">
-                <Button variant="ghost" size="sm" className="ml-auto gap-1 text-xs" asChild>
-                    <Link href={`/products/${product.id}`}>
-                        View details <ArrowRight className="h-3 w-3" />
-                    </Link>
-                </Button>
-            </CardFooter>
-        </Card>
-    );
+      {/* Structured specifications layout with thin dividing lines */}
+      <div className="mt-8 grid grid-cols-2 gap-4 border-t border-b border-border/80 py-4 text-xs">
+        <div className="space-y-1 border-r border-border/60 pr-2">
+          <span className="font-serif text-[10px] italic text-muted-foreground block">
+            Available Quantity
+          </span>
+          <span className="font-serif text-sm text-foreground block">
+            {Number(product.stockBaseQty).toLocaleString()} {unit}
+          </span>
+        </div>
+
+        <div className="space-y-1 pl-2">
+          <span className="font-serif text-[10px] italic text-muted-foreground block">
+            Base Valuation
+          </span>
+          <span className="font-serif text-sm font-semibold text-primary block">
+            ₹{Number(product.pricePerBaseUnit).toLocaleString("en-IN", { minimumFractionDigits: 2 })} <span className="text-[10px] font-normal text-muted-foreground">/{unit}</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Bottom text link with elegant layout */}
+      <div className="mt-6">
+        <Link 
+          href={`/products/${product.id}`}
+          className="flex items-center justify-between text-xs uppercase tracking-wider font-semibold text-foreground group-hover:text-primary transition-colors duration-200 focus-visible:outline-none"
+        >
+          <span className="flex items-center gap-2">
+            <FlaskConical className="h-3.5 w-3.5" /> Details & Specs
+          </span>
+          <span className="font-serif italic capitalize text-sm text-primary group-hover:underline">
+            Request quote &rarr;
+          </span>
+        </Link>
+      </div>
+
+    </div>
+  );
 }
