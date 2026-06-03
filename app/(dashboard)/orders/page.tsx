@@ -9,7 +9,7 @@ import { ShoppingBag, Plus } from "lucide-react";
 import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
-const STATUSES = ["ALL", "PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
+const STATUSES = ["ALL", "PENDING", "APPROVED", "REJECTED", "COMPLETED"];
 
 export default function OrdersPage() {
     const { status } = useSession();

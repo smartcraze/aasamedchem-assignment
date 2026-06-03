@@ -21,8 +21,8 @@ export function SellerDashboard({ session }: { session: SessionPayload }) {
     if (loading) return <PageSkeleton />;
 
     const pending   = orders.filter((o) => o.status === "PENDING").length;
-    const confirmed = orders.filter((o) => o.status === "CONFIRMED").length;
-    const delivered = orders.filter((o) => o.status === "DELIVERED").length;
+    const approved  = orders.filter((o) => o.status === "APPROVED").length;
+    const completed = orders.filter((o) => o.status === "COMPLETED").length;
 
     return (
         <div className="space-y-8">
@@ -38,8 +38,8 @@ export function SellerDashboard({ session }: { session: SessionPayload }) {
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <StatCard label="Total Orders" value={orders.length} icon={ShoppingBag} />
                 <StatCard label="Pending"      value={pending}       icon={Clock}       />
-                <StatCard label="Confirmed"    value={confirmed}     icon={CheckCircle} />
-                <StatCard label="Delivered"    value={delivered}     icon={Users}       />
+                <StatCard label="Approved"     value={approved}      icon={CheckCircle} />
+                <StatCard label="Completed"    value={completed}     icon={Users}       />
             </div>
 
             <section>

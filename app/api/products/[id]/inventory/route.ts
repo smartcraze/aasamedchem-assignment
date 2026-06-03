@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ProductInventorySchema } from "@/types/products";
 import { updateInventory } from "@/lib/repository/products";
-import requireAdmin from "@/lib/required-admin";
+import requireSeller from "@/lib/required-seller";
 import { revalidateTag } from "next/cache";
 
 export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const adminCheck = await requireAdmin();
-    if (adminCheck) return adminCheck;
+    const sellerCheck = await requireSeller();
+    if (sellerCheck) return sellerCheck;
 
     const { id } = await params;
     const body = await request.json();

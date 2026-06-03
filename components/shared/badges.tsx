@@ -24,15 +24,13 @@ export function RoleBadge({ role }: { role: string }) {
     );
 }
 
-type OrderStatus = "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+type OrderStatus = "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED";
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> = {
-    PENDING:    { label: "Pending",    className: "bg-accent/20 text-accent-foreground border-accent/40" },
-    CONFIRMED:  { label: "Confirmed",  className: "bg-secondary text-secondary-foreground border-border" },
-    PROCESSING: { label: "Processing", className: "bg-primary/15 text-primary border-primary/30" },
-    SHIPPED:    { label: "Shipped",    className: "bg-chart-3/20 text-chart-3 border-chart-3/30" },
-    DELIVERED:  { label: "Delivered",  className: "bg-chart-4/20 text-chart-4 border-chart-4/30" },
-    CANCELLED:  { label: "Cancelled",  className: "bg-destructive/20 text-foreground border-destructive/30" },
+    PENDING:    { label: "Pending Review", className: "bg-accent/20 text-accent-foreground border-accent/40" },
+    APPROVED:   { label: "Approved",       className: "bg-primary/15 text-primary border-primary/30" },
+    REJECTED:   { label: "Rejected",       className: "bg-destructive/20 text-foreground border-destructive/30" },
+    COMPLETED:  { label: "Completed",      className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
 };
 
 export function StatusBadge({ status }: { status: string }) {
