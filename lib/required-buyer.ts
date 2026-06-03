@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "./auth";
-import { RoleSchema } from "@/types/auth";
+import getSessionRole from "@/lib/getsessionRole";
 
 const requireBuyer = async (request: NextRequest) => {
-    const session = await auth.api.getSession({ headers: request.headers });
-    const role = RoleSchema.safeParse((session?.user as { role?: unknown })?.role);
+    const { session, roleResult } = await getSessionRole(request);
 
-    if (!session?.user || !role.success) {
+    if (!session?.user || !roleResult.success) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    if (role.data !== "BUYER" && role.data !== "ADMIN") {
+    if (roleResult.data !== "BUYER" && roleResult.data !== "ADMIN") {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

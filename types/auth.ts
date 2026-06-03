@@ -11,3 +11,15 @@ export const SessionUserSchema = z.object({
 });
 
 export type SessionUser = z.infer<typeof SessionUserSchema>;
+
+export const PublicRoleSchema = z.enum(["BUYER", "SELLER"]);
+export type PublicRole = z.infer<typeof PublicRoleSchema>;
+
+export const PublicSignUpSchema = z.object({
+    name: z.string().min(1),
+    email: z.string().email(),
+    password: z.string().min(8),
+    role: PublicRoleSchema.optional(),
+});
+
+export type PublicSignUpBody = z.infer<typeof PublicSignUpSchema>;
