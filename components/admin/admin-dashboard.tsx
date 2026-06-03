@@ -8,6 +8,7 @@ import { PageSkeleton } from "@/components/shared/loading-skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import type { SessionPayload } from "@/lib/auth";
+import { AdminAnalytics } from "./admin-analytics";
 
 export function AdminDashboard({ session }: { session: SessionPayload }) {
     const [orders, setOrders]     = useState<any[]>([]);
@@ -56,6 +57,8 @@ export function AdminDashboard({ session }: { session: SessionPayload }) {
                 <StatCard label="Users"          value={users.length}    icon={Users}       />
                 <StatCard label="Pending Orders" value={orders.filter((o) => o.status === "PENDING").length} icon={TrendingUp} />
             </div>
+
+            <AdminAnalytics orders={orders} />
 
             <section>
                 <h2 className="mb-4 font-serif text-lg font-semibold text-foreground">
