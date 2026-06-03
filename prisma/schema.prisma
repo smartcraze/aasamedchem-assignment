@@ -7,3 +7,102 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Role {
+  ADMIN
+  SELLER
+  BUYER
+}
+
+enum ProductDimension {
+  WEIGHT
+  VOLUME
+  COUNT
+}
+
+enum Unit {
+  G
+  KG
+  ML
+  L
+  UNIT
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+
+  role      Role     @default(BUYER)
+
+  buyerOrders  Order[] @relation("BuyerOrders")
+
+  sellerOrders Order[] @relation("SellerOrders")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  sku         String?  @unique
+  dimension ProductDimension
+  stockBaseQty Decimal @db.Decimal(20, 6)
+  pricePerBaseUnit Decimal @db.Decimal(20, 6)
+  isActive Boolean @default(true)
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id String @id @default(cuid())
+
+  buyerId String
+  buyer   User @relation("BuyerOrders", fields: [buyerId], references: [id])
+
+  sellerId String?
+  seller   User? @relation("SellerOrders", fields: [sellerId], references: [id])
+
+  status OrderStatus @default(PENDING)
+
+  totalAmount Decimal @db.Decimal(20, 6)
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id String @id @default(cuid())
+
+  orderId String
+  order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  orderedQty Decimal @db.Decimal(20, 6)
+
+  orderedUnit Unit
+
+  baseQty Decimal @db.Decimal(20, 6)
+
+  unitPrice Decimal @db.Decimal(20, 6)
+
+  totalPrice Decimal @db.Decimal(20, 6)
+
+  createdAt DateTime @default(now())
+}
