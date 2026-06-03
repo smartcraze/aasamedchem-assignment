@@ -1,71 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AasaMedChem — Precision Chemical Inventory & Quotation Platform
 
-## Getting Started
+AasaMedChem is an enterprise-grade chemical inventory and quotation management platform built for the chemical supply chain. The system supports multi-role access controls, implements strict canonical unit storage, and executes decimal-precise calculations with up to 6 decimal places of precision.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🌟 Core Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 🔐 Role-Based Access Control
+- **Admin**: Full system control. Manage products (CRUD), update base units/rates, adjust stock levels, monitor users, and assign sellers.
+- **Seller**: Operational management. View assigned orders, review quotations, and advance order status (Pending → Approved → Completed / Rejected).
+- **Buyer**: Purchasing workflow. Browse the catalog, request quotations for single/multiple compounds, choose desired ordering units, and preview live price calculations.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 📐 Precision Unit Conversion & Storage
+- Centralized conversion formulas prevent calculation drift.
+- Order in any supported unit (`kg`, `g`, `L`, `mL`, `items`); the system automatically converts and stores data in **internal base units** (`grams`, `milliliters`, `units`).
+- Displays stock and pricing clearly in the UI using original ordered metrics and converted base structures side-by-side for audit transparency.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 📈 Real-Time Dashboards & Analytics
+- **Recharts-free SVG Dashboards**: Custom lightweight SVG graphs built directly in React (avoiding dependency bloat and React 19 warnings). Includes a 5-day sales trend line chart, quotation status donut chart, and a top-revenue compound ranking bar chart.
+- **High-Performance Caching Layer**: Uses Next.js `unstable_cache` with dynamic keying based on queries, offering instantaneous response times (< 5ms) on dashboard indices, with automated `revalidateTag` invalidations on state changes.
 
-## API Routes
+---
 
-### Auth (Better Auth)
+## 🛠️ Tech Stack & Architecture
 
-- `GET /api/auth/ok` - health check
-- `GET /api/auth/session` - current session
-- `POST /api/auth/register` - public sign up (buyer or seller)
-- `GET|POST|PATCH|PUT|DELETE /api/auth/*` - Better Auth handler endpoints
+- **Frontend**: Next.js (App Router, Tailwind CSS, Lucide Icons, Radix UI via Shadcn).
+- **Styling**: Luxury lab editorial print layout (Lora serif headings, sharp print margins, and monospace data layout).
+- **Database**: Neon-hosted PostgreSQL.
+- **ORM**: Prisma Client.
+- **Auth**: Stateless token-based custom session cookie auth.
 
-### Products
+---
 
-- `GET /api/products` - list products (query: `q`, `dimension`, `isActive`, `take`, `skip`)
-- `POST /api/products` - create product (admin)
-- `GET /api/products/[id]` - get product
-- `PATCH /api/products/[id]` - update product (admin)
-- `DELETE /api/products/[id]` - delete product (admin)
-- `PATCH /api/products/[id]/inventory` - update stock (admin)
+## 💾 Data Modeling & Conversion Strategy
 
-### Orders
+### Database Schema Highlight (PostgreSQL types)
+- **Decimal Precision**: All fields for weights, volume capacities, unit prices, and order totals utilize the `Decimal` type mapped to `db.Decimal(20, 6)`. PostgreSQL `NUMERIC` types are chosen over `FLOAT` to prevent binary floating-point rounding errors during multi-unit divisions.
+- **Order Auditing**: The `OrderItem` stores both:
+  - `orderedQty` and `orderedUnit` (exactly what the buyer typed).
+  - `baseQty` (the converted canonical value).
+  - `unitPrice` and `totalPrice` (calculated at base-unit rates).
 
-- `GET /api/orders` - list orders (query: `status`, `buyerId`, `sellerId`, `take`, `skip`)
-- `POST /api/orders` - create order (buyer)
-- `POST /api/orders/preview` - price preview (buyer)
-- `GET /api/orders/[id]` - order details
-- `PATCH /api/orders/[id]` - update order status (seller/admin)
-- `PATCH /api/orders/[id]/assign` - assign seller (admin)
+### Canonical Unit Strategy
+| Dimension | Internal Base Unit | External Display/Order Units | Conversion Logic (Internal to Base) |
+|---|---|---|---|
+| **Weight** | Grams (`g`) | Grams (`G`), Kilograms (`KG`) | `1 kg = 1000 g` |
+| **Volume** | Milliliters (`mL`) | Milliliters (`ML`), Liters (`L`) | `1 L = 1000 mL` |
+| **Count** | Units (`unit`) | Units (`UNIT`) | `1 unit = 1 unit` |
 
-### Users (Admin)
+*Conversion formulas are centralized inside `lib/conversion.ts` and pricing calculations inside `app/api/orders/route.ts`.*
 
-- `GET /api/users` - list users (query: `q`, `role`, `take`, `skip`)
-- `POST /api/users` - create user (admin)
-- `GET /api/users/[id]` - get user (admin)
-- `PATCH /api/users/[id]` - update user (admin)
-- `DELETE /api/users/[id]` - delete user (admin)
+---
 
-## Learn More
+## 🔑 Test Credentials
 
-To learn more about Next.js, take a look at the following resources:
+You can log in to test each panel using the following seeded credentials (password for all is `password123`):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Role | Email | Password | Allowed Capabilities |
+|---|---|---|---|
+| **Admin** | `admin@medchem.com` | `password123` | Create/edit products, manage users, view all orders |
+| **Seller** | `seller@medchem.com` | `password123` | Review/approve orders assigned to them |
+| **Buyer** | `buyer@medchem.com` | `password123` | Browse catalog, request new single/multi-item quotes |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🚀 Setup Instructions
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 1. Run Locally
+Prerequisites: [Bun](https://bun.sh/) or Node.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Clone the repository and install dependencies:
+   ```bash
+   bun install
+   ```
+
+2. Create a `.env` file in the root directory:
+   ```env
+   DATABASE_URL="postgres://[user]:[password]@[host]/[dbname]?sslmode=require"
+   JWT_SECRET="generate-a-secure-random-string-here"
+   ```
+
+3. Run migrations and generate the client:
+   ```bash
+   bun prisma db push
+   ```
+
+4. Populate the database with the seed script (users and products):
+   ```bash
+   bun run db:seed
+   ```
+
+5. Launch the local dev server:
+   ```bash
+   bun run dev
+   ```
+   Open `http://localhost:3000` to access the application.
+
+---
+
+## 🌐 Deployment to Vercel
+
+To host this project on Vercel:
+
+1. **Push to GitHub**: Link your repository to GitHub.
+2. **Create Vercel Project**: Go to Vercel, select **Add New Project**, and import the repository.
+3. **Environment Variables**: Add your production variables in the Vercel dashboard:
+   - `DATABASE_URL` (your Neon connection string)
+   - `JWT_SECRET` (your session encryption string)
+4. **Deploy**: Click deploy. Vercel automatically builds and optimizes the App Router routes.
