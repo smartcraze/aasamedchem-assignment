@@ -20,6 +20,41 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## API Routes
+
+### Auth (Better Auth)
+
+- `GET /api/auth/ok` - health check
+- `GET /api/auth/session` - current session
+- `POST /api/auth/register` - public sign up (buyer or seller)
+- `GET|POST|PATCH|PUT|DELETE /api/auth/*` - Better Auth handler endpoints
+
+### Products
+
+- `GET /api/products` - list products (query: `q`, `dimension`, `isActive`, `take`, `skip`)
+- `POST /api/products` - create product (admin)
+- `GET /api/products/[id]` - get product
+- `PATCH /api/products/[id]` - update product (admin)
+- `DELETE /api/products/[id]` - delete product (admin)
+- `PATCH /api/products/[id]/inventory` - update stock (admin)
+
+### Orders
+
+- `GET /api/orders` - list orders (query: `status`, `buyerId`, `sellerId`, `take`, `skip`)
+- `POST /api/orders` - create order (buyer)
+- `POST /api/orders/preview` - price preview (buyer)
+- `GET /api/orders/[id]` - order details
+- `PATCH /api/orders/[id]` - update order status (seller/admin)
+- `PATCH /api/orders/[id]/assign` - assign seller (admin)
+
+### Users (Admin)
+
+- `GET /api/users` - list users (query: `q`, `role`, `take`, `skip`)
+- `POST /api/users` - create user (admin)
+- `GET /api/users/[id]` - get user (admin)
+- `PATCH /api/users/[id]` - update user (admin)
+- `DELETE /api/users/[id]` - delete user (admin)
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

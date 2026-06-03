@@ -45,9 +45,7 @@ export async function proxy(request: NextRequest) {
         return NextResponse.next();
     }
 
-    const session = await auth.api.getSession({
-        headers: request.headers,
-    });
+    const session = await auth(request);
 
     if (!session?.user) {
         return unauthorizedResponse(request);

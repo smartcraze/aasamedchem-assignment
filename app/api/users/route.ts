@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { getUserByEmail, listUsers, updateUser } from "@/lib/repository/users";
+import bcrypt from "bcryptjs";
+import { db } from "@/lib/prisma";
+import { getUserByEmail, listUsers } from "@/lib/repository/users";
 import requireAdmin from "@/lib/required-admin";
 import { UserCreateSchema, UserQuerySchema } from "@/types/users";
 
@@ -37,23 +38,29 @@ export async function POST(request: NextRequest) {
 
     const { name, email, password, role } = parsed.data;
 
-    try {
-        await auth.api.signUpEmail({
-            body: { name, email, password },
-            headers: request.headers,
-        });
-    } catch (error) {
-        return NextResponse.json({ error: "Unable to create user" }, { status: 400 });
+    const existing = await getUserByEmail(email);
+    if (existing) {
+        return NextResponse.json({ error: "Email already exists" }, { status: 400 });
     }
 
-    let user = await getUserByEmail(email);
-    if (!user) {
-        return NextResponse.json({ error: "User creation failed" }, { status: 500 });
-    }
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    if (role && role !== user.role) {
-        user = await updateUser(user.id, { role });
-    }
+    const user = await db.user.create({
+        data: {
+            name,
+            email,
+            password: hashedPassword,
+            role: role ?? "BUYER",
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
+        },
+    });
 
     return NextResponse.json(user, { status: 201 });
 }

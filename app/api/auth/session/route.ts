@@ -4,9 +4,7 @@ import { auth } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-    const session = await auth.api.getSession({
-        headers: request.headers,
-    });
+    const session = await auth(request);
 
     return NextResponse.json(session);
 }

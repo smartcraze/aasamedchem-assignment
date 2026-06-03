@@ -1,26 +1,72 @@
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import { nextCookies } from "better-auth/next-js";
-import { db } from "./prisma";
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { db } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
-export const auth = betterAuth({
-    database: prismaAdapter(db, {
-        provider: "postgresql",
-    }),
-    user: {
-        additionalFields: {
-            role: {
-                type: "string",
-                required: true,
-                input: false,
-                returned: true,
+export const { handlers, signIn, signOut, auth } = NextAuth({
+    adapter: PrismaAdapter(db),
+
+    providers: [
+        Credentials({
+            name: "credentials",
+            credentials: {
+                email: {},
+                password: {},
             },
+
+            async authorize(credentials) {
+                if (!credentials.email || !credentials.password) {
+                    return null;
+                }
+
+                const user = await db.user.findUnique({
+                    where: {
+                        email: credentials.email as string,
+                    },
+                });
+
+                if (!user || !user.password) {
+                    return null;
+                }
+
+                const validPassword = await bcrypt.compare(
+                    credentials.password as string,
+                    user.password
+                );
+
+                if (!validPassword) {
+                    return null;
+                }
+
+                return {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                    role: user.role,
+                };
+            },
+        }),
+    ],
+
+    session: {
+        strategy: "jwt",
+    },
+
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user) {
+                token.role = (user as any).role;
+            }
+            return token;
+        },
+
+        async session({ session, token }) {
+            if (session.user) {
+                session.user.id = token.sub!;
+                session.user.role = token.role as string;
+            }
+            return session;
         },
     },
-    emailAndPassword: {
-        enabled: true,
-        minPasswordLength: 8,
-        maxPasswordLength: 128,
-    },
-    plugins: [nextCookies()],
 });
